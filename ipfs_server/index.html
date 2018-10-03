@@ -1,0 +1,93 @@
+<html>
+    <head>
+        <body>
+            <p>ipfs API 测试</p>
+            <br/>
+            <h3>上传功能</h3>
+            <input type="file" id="upfile" />
+            <br/><br/>
+            <button id="upload">上传文件</button>
+            <textarea  id="upRes" cols=80 disabled=true rows=3 offsetHeight&scrollHeight >显示调用结果</textarea>
+            <br/>
+            <br/>
+            <h3>下载功能</h3>
+            <label>输入哈希值</label>
+            <textarea id="downhash" cols=60></textarea>
+            <br /><br/>
+            <label>输入文件名(不输入默认保存为down.load)</label>
+            <textarea id="downname" cols=60></textarea>
+            <br /><br/>
+            <button id="download">下载文件</button>
+            <textarea  id="downRes" cols=80 disabled=true rows=3 offsetHeight&scrollHeight >显示调用结果</textarea>
+
+            <script>
+                //上传文件的处理函数
+                document.querySelector('#upload').onclick = function() {
+                    if (document.getElementById("upfile").files[0]==null){
+                        alert("请先选择文件")
+                        return
+                    }
+                    var formdata=new FormData();
+                    formdata.append("file",document.getElementById("upfile").files[0],document.getElementById("upfile").files[0].name); 
+                    var xmlhttp;
+                    if(window.XMLHttpRequest){
+                        xmlhttp=new XMLHttpRequest();
+                    }else{
+                        xmlhttp= new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                    xmlhttp.onreadystatechange=function(){
+                        if(xmlhttp.readyState==4 && xmlhttp.status==200){
+                            document.getElementById("upRes").value=xmlhttp.responseText;
+                        }
+                        else{
+                            document.getElementById("upRes").value="正在上传";
+                        }
+                    }
+                    xmlhttp.open("POST","http://119.28.52.50:5001/api/v0/add",true);
+                    xmlhttp.send(formdata);
+                };
+                //下载文件的处理函数
+                document.querySelector('#download').onclick =function(){
+                    if(document.getElementById("downhash").value==""){
+                        alert("请输入哈希值")
+                        return
+                    }
+                    var downfilename;
+                    if(document.getElementById("downname").value==""){
+                        downfilename="down.load";
+                    }else{
+                        downfilename=document.getElementById("downname").value;
+                    }
+                    var xmlhttp;
+                    if(window.XMLHttpRequest){
+                        xmlhttp=new XMLHttpRequest();
+                    }else{
+                        xmlhttp= new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                    xmlhttp.responseType = "blob";
+                    xmlhttp.onreadystatechange=function(){
+                        if(xmlhttp.readyState==4 && xmlhttp.status==200){
+                            document.getElementById("downRes").value="下载完成";
+                            var blob = this.response;
+                            var reader = new FileReader();
+                            reader.readAsDataURL(blob);    // 转换为base64，
+                            reader.onload = function (e) {
+                                // 转换完成，创建一个a标签用于下载
+                                var a = document.createElement('a');
+                                a.download = downfilename;
+                                a.href = e.target.result;
+                                a.click();
+                            }
+                        }
+                        else{
+                            document.getElementById("downRes").value="正在下载";
+                        }
+                    }
+                    var hash=document.getElementById("downhash").value;
+                    xmlhttp.open("GET","http://119.28.52.50:5001/api/v0/cat?arg="+hash,true);
+                    xmlhttp.send();
+                }
+            </script>
+        </body>
+    </head>
+</html>
